@@ -1,0 +1,6 @@
+{
+  "name": "For Aini - Light of Polaris",
+  "description": "Surat dan pesan khusus untuk Aini dengan tema bintang Polaris.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
