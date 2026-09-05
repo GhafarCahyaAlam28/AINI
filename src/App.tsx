@@ -28,6 +28,43 @@ export default function App() {
       ? current.replace('ais-dev-', 'ais-pre-')
       : current;
     setShareUrl(publicUrl);
+
+    // 1. Coba langsung nyalakan audio seketika saat halaman dibuka
+    const tryAutoplay = async () => {
+      const started = await celestialAudio.play();
+      if (started) {
+        setIsMusicPlaying(true);
+      }
+    };
+    tryAutoplay();
+
+    // 2. Karena browser memblokir suara sebelum ada interaksi pertama (kebijakan keamanan browser),
+    // aktifkan suara seketika pengguna menyentuh layar, menggeser, atau mengklik di mana saja
+    const handleFirstInteraction = async () => {
+      const started = await celestialAudio.play();
+      if (started) {
+        setIsMusicPlaying(true);
+        cleanupListeners();
+      }
+    };
+
+    const cleanupListeners = () => {
+      window.removeEventListener('click', handleFirstInteraction);
+      window.removeEventListener('touchstart', handleFirstInteraction);
+      window.removeEventListener('pointerdown', handleFirstInteraction);
+      window.removeEventListener('scroll', handleFirstInteraction);
+      window.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    window.addEventListener('click', handleFirstInteraction, { passive: true });
+    window.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+    window.addEventListener('pointerdown', handleFirstInteraction, { passive: true });
+    window.addEventListener('scroll', handleFirstInteraction, { passive: true });
+    window.addEventListener('keydown', handleFirstInteraction, { passive: true });
+
+    return () => {
+      cleanupListeners();
+    };
   }, []);
 
   const toggleMusic = () => {

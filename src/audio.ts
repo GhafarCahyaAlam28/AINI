@@ -32,11 +32,24 @@ class CelestialAmbientAudio {
     }
   }
 
-  public play() {
+  public async play(): Promise<boolean> {
     this.init();
-    if (this.isPlaying) return;
-    this.isPlaying = true;
-    this.scheduleNextChime();
+    if (!this.ctx) return false;
+    try {
+      if (this.ctx.state === 'suspended') {
+        await this.ctx.resume();
+      }
+      if (this.ctx.state === 'running') {
+        if (!this.isPlaying) {
+          this.isPlaying = true;
+          this.scheduleNextChime();
+        }
+        return true;
+      }
+    } catch {
+      // Browser blocked autoplay without user gesture
+    }
+    return false;
   }
 
   private scheduleNextChime() {

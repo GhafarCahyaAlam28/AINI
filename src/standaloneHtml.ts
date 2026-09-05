@@ -181,6 +181,94 @@ export function getStandaloneHtml(): string {
       <div class="footer">AELMAR SOL · 2026</div>
     </section>
   </main>
+
+  <script>
+    (function() {
+      var ctx = null;
+      var isPlaying = false;
+      var timer = null;
+      var masterGain = null;
+      var notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+
+      function initAudio() {
+        if (!ctx) {
+          var AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          ctx = new AudioCtx();
+          masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime(0.2, ctx.currentTime);
+          masterGain.connect(ctx.destination);
+        }
+      }
+
+      function triggerChime(freq) {
+        if (!ctx || !masterGain) return;
+        try {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          var now = ctx.currentTime;
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.exponentialRampToValueAtTime(0.12, now + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.8);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 2.9);
+        } catch(e) {}
+      }
+
+      function scheduleNextChime() {
+        if (!isPlaying || !ctx || !masterGain) return;
+        var note = notes[Math.floor(Math.random() * notes.length)];
+        triggerChime(note);
+        if (Math.random() > 0.4) {
+          var note2 = notes[Math.floor(Math.random() * notes.length)];
+          setTimeout(function() {
+            if (isPlaying) triggerChime(note2);
+          }, 240);
+        }
+        var nextInterval = 2200 + Math.random() * 2300;
+        timer = setTimeout(scheduleNextChime, nextInterval);
+      }
+
+      function startAudio() {
+        initAudio();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(function() {
+            if (!isPlaying && ctx.state === 'running') {
+              isPlaying = true;
+              scheduleNextChime();
+            }
+          });
+        } else if (ctx.state === 'running') {
+          if (!isPlaying) {
+            isPlaying = true;
+            scheduleNextChime();
+          }
+        }
+      }
+
+      // Coba langsung nyalakan audio saat halaman terbuka
+      startAudio();
+
+      // Nyalakan juga pada sentuhan / klik / scroll pertama
+      function onFirstUserGesture() {
+        startAudio();
+        window.removeEventListener('click', onFirstUserGesture);
+        window.removeEventListener('touchstart', onFirstUserGesture);
+        window.removeEventListener('pointerdown', onFirstUserGesture);
+        window.removeEventListener('scroll', onFirstUserGesture);
+      }
+
+      window.addEventListener('click', onFirstUserGesture, { passive: true });
+      window.addEventListener('touchstart', onFirstUserGesture, { passive: true });
+      window.addEventListener('pointerdown', onFirstUserGesture, { passive: true });
+      window.addEventListener('scroll', onFirstUserGesture, { passive: true });
+    })();
+  </script>
 </body>
 </html>`;
 }
